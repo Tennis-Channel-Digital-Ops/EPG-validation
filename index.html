@@ -9,8 +9,6 @@
     <!-- Use Inter font --><link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- JW Player -->
-    <script src="https://cdn.jwplayer.com/libraries/2mSTueQs.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -649,28 +647,35 @@
             }
 
             function setupWatchFeedButton() {
-                watchFeedBtn.addEventListener('click', () => {
+                watchFeedBtn.addEventListener('click', (event) => {
+                    event.stopPropagation(); // Prevent click from immediately closing the dropdown
                     const selectedChannelName = channelSelectEl.options[channelSelectEl.selectedIndex].text;
                     const feedUrl = VIDEO_FEEDS[selectedChannelName];
 
                     if (feedUrl) {
                         const isHidden = videoPlayerDropdown.classList.toggle('hidden');
+                        
+                        // Always clear previous content to stop any playing video
+                        videoPlayerContainer.innerHTML = '';
+
                         if (!isHidden) {
-                            jwplayer(videoPlayerContainer.id).setup({
-                                "file": feedUrl,
-                                "width": "100%",
-                                "height": "100%",
-                                "autostart": true,
-                                "mute": false
-                            });
+                            const iframe = document.createElement('iframe');
+                            iframe.src = feedUrl;
+                            iframe.width = '100%';
+                            iframe.height = '215'; // Fixed height for the container
+                            iframe.frameborder = '0';
+                            iframe.allowfullscreen = true;
+                            videoPlayerContainer.appendChild(iframe);
                         }
                     }
                 });
 
                 // Close dropdown if clicking outside
                 document.addEventListener('click', (event) => {
-                    if (!watchFeedBtn.contains(event.target) && !videoPlayerDropdown.contains(event.target)) {
+                    if (!videoPlayerDropdown.contains(event.target) && !watchFeedBtn.contains(event.target)) {
                         videoPlayerDropdown.classList.add('hidden');
+                        // Stop video when closing
+                        videoPlayerContainer.innerHTML = '';
                     }
                 });
             }
