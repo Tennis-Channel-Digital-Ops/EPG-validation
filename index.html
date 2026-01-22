@@ -5,15 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi-Channel EPG Dashboard</title>
     <link rel="icon" type="image/svg+xml" href="https://www.svgrepo.com/show/35457/calendar-symbol.svg">
-    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
-    <!-- Use Inter font --><link rel="preconnect" href="https://fonts.googleapis.com">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Simple spinner */
+        body { font-family: 'Inter', sans-serif; }
         .loader {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #3498db;
@@ -22,729 +19,110 @@
             height: 40px;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        /* Carousel button icons */
-        .carousel-btn-prev::before {
-            content: '\276E';
-        }
-        .carousel-btn-next::before {
-            content: '\276F';
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .carousel-btn-prev::before { content: '\276E'; }
+        .carousel-btn-next::before { content: '\276F'; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 md:p-8">
 
-    <div class="max-w-7xl mx-auto bg-white rounded-lg shadow-xl p-6 md:p-8">
-        
-        <header class="pb-6 border-b border-gray-200 mb-6">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-                <div>
-                    <h1 id="main-title" class="text-3xl font-bold text-gray-900">EPG Dashboard</h1>
-                    <p id="channel-name" class="text-xl text-blue-600 font-medium mt-1"></p>
-                </div>
-                <div class="flex items-center space-x-4 mt-4 md:mt-0">
-                    <div id="watch-feed-container" class="relative">
-                        <button id="watch-feed-btn" class="hidden bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Watch Feed
-                        </button>
-                        <div id="video-player-dropdown" class="hidden absolute right-0 mt-2 w-96 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                            <div id="video-player" class="w-full h-full"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="timezone-select" class="block text-sm font-medium text-gray-700 mb-1">Timezone:</label>
-                        <select id="timezone-select" name="timezone" class="block w-full md:w-auto pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm">
-                            <!-- Options will be populated by JS -->
-                        </select>
-                    </div>
-                    <div>
-                        <label for="channel-select" class="block text-sm font-medium text-gray-700 mb-1">Select Channel:</label>
-                        <select id="channel-select" name="channel" class="block w-full md:w-auto pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm">
-                            <!-- Options will be populated by JS -->
-                        </select>
-                    </div>
+<div class="max-w-7xl mx-auto bg-white rounded-lg shadow-xl p-6 md:p-8">
+
+<header class="pb-6 border-b border-gray-200 mb-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+            <h1 id="main-title" class="text-3xl font-bold text-gray-900">EPG Dashboard</h1>
+            <p id="channel-name" class="text-xl text-blue-600 font-medium mt-1"></p>
+        </div>
+        <div class="flex items-center space-x-4 mt-4 md:mt-0">
+            <div id="watch-feed-container" class="relative">
+                <button id="watch-feed-btn" class="hidden bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-700">
+                    Watch Feed
+                </button>
+                <div id="video-player-dropdown" class="hidden absolute right-0 mt-2 w-96 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                    <div id="video-player" class="w-full h-full"></div>
                 </div>
             </div>
-        </header>
-
-        <!-- Loading State --><div id="loading" class="flex flex-col items-center justify-center p-12">
-            <div class="loader"></div>
-            <p class="mt-4 text-lg font-medium text-gray-600">Fetching and analyzing EPG data...</p>
+            <div>
+                <label for="timezone-select" class="block text-sm font-medium text-gray-700 mb-1">Timezone:</label>
+                <select id="timezone-select" class="block w-full md:w-auto pl-3 pr-10 py-2 border-gray-300 rounded-md shadow-sm"></select>
+            </div>
+            <div>
+                <label for="channel-select" class="block text-sm font-medium text-gray-700 mb-1">Select Channel:</label>
+                <select id="channel-select" class="block w-full md:w-auto pl-3 pr-10 py-2 border-gray-300 rounded-md shadow-sm"></select>
+            </div>
         </div>
-
-        <!-- Error State --><div id="error" class="hidden p-6 bg-red-100 border border-red-300 rounded-lg">
-            <h3 class="text-xl font-bold text-red-800">Error Loading Data</h3>
-            <p id="error-message" class="mt-2 text-red-700"></p>
-        </div>
-
-        <!-- Main Content (hidden until loaded) --><main id="content" class="hidden">
-            
-            <!-- Analysis Dashboard --><section id="dashboard-analysis" class="mb-8">
-                <h2 class="text-2xl font-semibold text-gray-800 border-b pb-3 mb-4">Dashboard Analysis</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Stats Card --><div class="bg-blue-50 p-5 rounded-lg shadow-sm border border-blue-200">
-                        <h3 class="text-lg font-semibold text-blue-800">Schedule Stats</h3>
-                        <ul class="mt-3 space-y-2">
-                            <li><strong>Total Programs:</strong> <span id="stat-total">0</span></li>
-                            <li><strong>Current Program:</strong> <span id="stat-current" class="font-medium">N/A</span></li>
-                            <li><strong>Upcoming:</strong> <span id="stat-upcoming">0</span></li>
-                            <li><strong>Finished:</strong> <span id="stat-past">0</span></li>
-                            <li><strong>Errors:</strong> <span id="stat-errors" class="font-bold text-red-600">0</span></li>
-                            <!-- MODIFIED: Added Scheduled Through field --><li><strong>Scheduled Through:</strong> <span id="stat-scheduled-through">N/A</span></li>
-                        </ul>
-                    </div>
-                    <!-- Errors Card --><div id="errors-card" class="bg-red-50 p-5 rounded-lg shadow-sm border border-red-300">
-                        <h3 class="text-lg font-semibold text-red-800">Schedule Errors</h3>
-                        <p class="text-sm text-red-700 mb-3">Programs with missing images or placeholder titles.</p>
-                        <div id="analysis-errors" class="space-y-2 text-red-900">
-                            <p>No errors found.</p>
-                        </div>
-                    </div>
-                    <!-- Gaps Card --><div class="bg-yellow-50 p-5 rounded-lg shadow-sm border border-yellow-300">
-                        <h3 class="text-lg font-semibold text-yellow-800">Schedule Gaps</h3>
-                        <p class="text-sm text-yellow-700 mb-3">Time between programs where nothing is scheduled.</p>
-                        <div id="analysis-gaps" class="space-y-2 text-yellow-900">
-                            <p>No gaps found.</p>
-                        </div>
-                    </div>
-                    <!-- Overlaps Card --><div class="bg-red-50 p-5 rounded-lg shadow-sm border border-red-300">
-                        <h3 class="text-lg font-semibold text-red-800">Schedule Overlaps</h3>
-                        <p class="text-sm text-red-700 mb-3">Programs scheduled to air at the same time.</p>
-                        <div id="analysis-overlaps" class="space-y-2 text-red-900">
-                            <p>No overlaps found.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Program Listings --><section>
-                <h2 class="text-2xl font-semibold text-gray-800 border-b pb-3 mb-6">Program Listings</h2>
-                
-                <!-- Nav Tabs --><div class="mb-6">
-                    <div class="border-b border-gray-200">
-                        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                            <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600" data-target="tab-current">
-                                Now Playing
-                            </button>
-                            <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-target="tab-upcoming">
-                                Upcoming
-                            </button>
-                            <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-target="tab-past">
-                                 Finished
-                             </button>
-                         </nav>
-                     </div>
-                 </div>
- 
-                 <!-- Tab Panels --><div id="tab-panels">
-                     <div id="tab-current" class="tab-panel space-y-4"></div>
-                     <div id="tab-upcoming" class="tab-panel hidden space-y-4"></div>
-                     <div id="tab-past" class="tab-panel hidden space-y-4">
-                        <!-- Date Picker for History --><div class="mb-4 p-4 bg-gray-50 rounded-lg border">
-                            <label for="history-date-picker" class="block text-sm font-medium text-gray-700 mb-1">Select a day to review:</label>
-                            <input type="date" id="history-date-picker" name="history-date" class="block w-full md:w-auto p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <div id="history-container" class="space-y-4">
-                            <p class="text-gray-500 p-4 text-center">Select a date to view past programs.</p>
-                        </div>
-                     </div>
-                 </div>
- 
-             </section>
-
-        </main>
     </div>
+</header>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- CONFIGURATION ---
-            // IMPORTANT: Replace 'YOUR_SERVER_IP' with the public IP address or domain name of your API server.
-            // The server now runs on HTTPS.
-            // Example: const API_BASE_URL = 'https://192.168.8.126:1221/api';
-            // DO NOT add a trailing slash after the IP address.
-            const API_BASE_URL = 'https://192.168.8.126:1221/api';
+<div id="loading" class="flex flex-col items-center justify-center p-12">
+    <div class="loader"></div>
+    <p class="mt-4 text-lg font-medium text-gray-600">Fetching and analyzing EPG data...</p>
+</div>
 
-            const VIDEO_FEEDS = {
-                'TC UK': 'https://cdn.jwplayer.com/previews/So86XwdK-2mSTueQs',
-                'TC Germany': 'https://cdn.jwplayer.com/previews/2rAe89Fm-2mSTueQs',
-                'TC Spain': 'https://cdn.jwplayer.com/previews/cAUFNieU-2mSTueQs',
-                'TC France': 'https://cdn.jwplayer.com/previews/z6calKbt-2mSTueQs',
-                'TC Global': 'https://cdn.jwplayer.com/previews/aY3XfvUf-2mSTueQs',
-                'TC India': 'https://cdn.jwplayer.com/previews/adYQ3ox5-2mSTueQs'
-            };
+<div id="error" class="hidden p-6 bg-yellow-100 border border-yellow-300 rounded-lg">
+    <h3 class="text-xl font-bold text-yellow-800">Initialization Required</h3>
+    <div id="error-message" class="mt-2 text-yellow-900"></div>
+</div>
 
-            // --- Element References ---
-            const loadingEl = document.getElementById('loading');
-            const errorEl = document.getElementById('error');
-            const errorMessageEl = document.getElementById('error-message');
-            const contentEl = document.getElementById('content');
-            
-            const mainTitleEl = document.getElementById('main-title');
-            // channelNameEl is now unused to display content
-            // const channelNameEl = document.getElementById('channel-name');
-            const channelSelectEl = document.getElementById('channel-select');
-            const watchFeedBtn = document.getElementById('watch-feed-btn');
-            const videoPlayerDropdown = document.getElementById('video-player-dropdown');
-            const videoPlayerContainer = document.getElementById('video-player');
-            const timezoneSelectEl = document.getElementById('timezone-select');
-            
-            // Stats
-            const statTotalEl = document.getElementById('stat-total');
-            const statCurrentEl = document.getElementById('stat-current');
-            const statUpcomingEl = document.getElementById('stat-upcoming');
-            const statPastEl = document.getElementById('stat-past');
-            const statScheduledThroughEl = document.getElementById('stat-scheduled-through'); // New stat element
-            const statErrorsEl = document.getElementById('stat-errors');
+<main id="content" class="hidden"></main>
 
-            // Analysis
-            const gapsContainer = document.getElementById('analysis-gaps');
-            const overlapsContainer = document.getElementById('analysis-overlaps');
-            const errorsContainer = document.getElementById('analysis-errors');
+</div>
 
-            // Tabs
-            const tabButtons = document.querySelectorAll('.tab-btn');
-            const tabPanels = document.querySelectorAll('.tab-panel');
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const API_BASE_URL = 'https://192.168.8.126:1221/api';
 
-            // Program Containers
-            const currentContainer = document.getElementById('tab-current');
-            const upcomingContainer = document.getElementById('tab-upcoming');
-            const pastContainer = document.getElementById('tab-past');
-            const historyDatePicker = document.getElementById('history-date-picker');
-            const historyContainer = document.getElementById('history-container');
+    const loadingEl = document.getElementById('loading');
+    const errorEl = document.getElementById('error');
+    const errorMessageEl = document.getElementById('error-message');
+    const contentEl = document.getElementById('content');
+    const channelSelectEl = document.getElementById('channel-select');
+    const timezoneSelectEl = document.getElementById('timezone-select');
 
-            // --- Helper Functions ---
+    function showCertInstructions() {
+        errorMessageEl.innerHTML = `
+            <ol class="list-decimal ml-5 space-y-2">
+                <li>
+                    To initialize data click here:<br>
+                    <a href="https://192.168.8.126:1221/api/channels" target="_blank" class="text-blue-700 underline">
+                        https://192.168.8.126:1221/api/channels
+                    </a>
+                </li>
+                <li>Then click <strong>Advanced</strong></li>
+                <li>Finally click <strong>Proceed to 192.168.8.126 (unsafe)</strong></li>
+                <li>Return to this page and refresh</li>
+            </ol>
+        `;
+        loadingEl.classList.add('hidden');
+        errorEl.classList.remove('hidden');
+    }
 
-            /**
-             * Resets the entire UI to a loading state.
-             */
-            function resetUI() {
-                // Show loading, hide others
-                loadingEl.classList.remove('hidden');
-                contentEl.classList.add('hidden');
-                errorEl.classList.add('hidden');
+    async function initialize() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/channels`);
+            if (!response.ok) throw new Error("Failed to fetch channels");
 
-                // Reset titles
-                mainTitleEl.textContent = 'EPG Dashboard';
+            const channels = await response.json();
+            channels.forEach(ch => {
+                const opt = document.createElement('option');
+                opt.value = ch.id;
+                opt.textContent = ch.name;
+                channelSelectEl.appendChild(opt);
+            });
 
-                // Reset stats
-                statTotalEl.textContent = '0';
-                statCurrentEl.textContent = 'N/A';
-                statUpcomingEl.textContent = '0';
-                statPastEl.textContent = '0';
-                statScheduledThroughEl.textContent = 'N/A';
-                statErrorsEl.textContent = '0';
+            loadingEl.classList.add('hidden');
+            contentEl.classList.remove('hidden');
 
-                // Reset analysis
-                gapsContainer.innerHTML = '<p>No gaps found.</p>';
-                overlapsContainer.innerHTML = '<p>No overlaps found.</p>';
-                errorsContainer.innerHTML = '<p>No errors found.</p>';
+        } catch (err) {
+            console.error("Initialization failed:", err);
+            showCertInstructions();
+        }
+    }
 
-                // Reset program lists, but preserve the structure of the Finished tab
-                currentContainer.innerHTML = '';
-                upcomingContainer.innerHTML = '';
-                const historyContainerEl = document.getElementById('history-container');
-                if (historyContainerEl) {
-                    historyContainerEl.innerHTML = '<p class="text-gray-500 p-4 text-center">Select a date to view past programs.</p>';
-                }
-                const datePicker = document.getElementById('history-date-picker');
-                if (datePicker) {
-                    datePicker.value = ''; // Reset date picker
-                }
+    initialize();
+});
+</script>
 
-                // Reset tabs to default (first tab active)
-                tabButtons.forEach((btn, index) => {
-                    if (index === 0) {
-                        btn.classList.add('border-blue-500', 'text-blue-600');
-                        btn.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-                    } else {
-                        btn.classList.remove('border-blue-500', 'text-blue-600');
-                        btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-                    }
-                });
-                tabPanels.forEach((panel, index) => {
-                    panel.classList.toggle('hidden', index !== 0);
-                });
-            }
-
-            function getSelectedTimezone() {
-                return sessionStorage.getItem('timezone') || 'UTC';
-            }
-
-            function formatTimeRange(start, stop) {
-                const timeZone = getSelectedTimezone();
-                const options = { hour: 'numeric', minute: 'numeric', hour12: true, timeZone };
-                const dateOptions = { month: 'short', day: 'numeric', timeZone };
-                
-                const startTime = start.toLocaleTimeString('en-US', options);
-                const stopTime = stop.toLocaleTimeString('en-US', options);
-                const dateStr = start.toLocaleDateString('en-US', dateOptions);
-
-                return `${startTime} - ${stopTime} (${dateStr})`;
-            }
-
-            function formatTime(date) {
-                const timeZone = getSelectedTimezone();
-                const options = { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true, timeZone };
-                return date.toLocaleTimeString('en-US', options);
-            }
-            
-            function formatDate(date) {
-                const timeZone = getSelectedTimezone();
-                const options = { year: 'numeric', month: 'long', day: 'numeric', timeZone };
-                return date.toLocaleDateString('en-US', options);
-            }
-
-            function getDurationInMinutes(start, stop) {
-                return Math.round((stop.getTime() - start.getTime()) / (1000 * 60));
-            }
-
-            function createProgramCard(program) {
-               // Destructure all potential fields from the program object
-               const {
-                   start_time, stop_time, title, sub_title, description, category, rating, id,
-                   language, orig_language, program_date, episode_num, credits, video_details, audio_details,
-                   previously_shown, live, premiere, has_error
-               } = program;
-               
-               // Convert ISO strings to Date objects
-               const start = new Date(start_time);
-               const stop = new Date(stop_time);
- 
-               // --- Safely Parse JSON String Data ---
-               let icons = [];
-               try {
-                   icons = JSON.parse(program.icons.replace(/'/g, '"'));
-               } catch (e) { console.warn("Could not parse icons for program:", title, e); }
- 
-               let creditsObj = { directors: [], actors: [] };
-               try {
-                   // Handle potential single quotes in names by careful replacement
-                   const sanitizedCredits = credits.replace(/'/g, '"');
-                   creditsObj = JSON.parse(sanitizedCredits);
-               } catch (e) { console.warn("Could not parse credits:", title, e); }
- 
-               // --- Image and Description Formatting ---
-               const placeholderImg = `https://placehold.co/320x180/e2e8f0/94a3b8?text=${encodeURIComponent(title)}`;
-               const shortDesc = description && description.length > 150 ? description.substring(0, 150) + '...' : description;
-               const defaultImageIndex = icons.length > 1 ? 1 : 0;
- 
-               const cardHTML = `
-                   <div class="program-card bg-white border rounded-lg shadow-sm overflow-hidden flex flex-col md:flex-row ${has_error ? 'border-red-500 border-2' : 'border-gray-200'}">
-                       <!-- Image Carousel -->
-                       <div class="relative w-full md:w-48 lg:w-64 h-40 md:h-auto bg-gray-200 flex-shrink-0">
-                           ${(icons.length > 0 ? icons : [null]).map((icon, index) => `
-                               <img src="${icon || placeholderImg}" alt="${title}" class="program-image program-image-${id} w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-300 ${index === defaultImageIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}" data-index="${index}" onerror="this.onerror=null; this.src='${placeholderImg}';">
-                           `).join('')}
-                           ${icons.length > 1 ? `
-                               <button class="carousel-btn carousel-btn-prev absolute top-1/2 left-2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold hover:bg-opacity-75 focus:outline-none z-20" data-program-id="${id}" data-direction="-1"></button>
-                               <button class="carousel-btn carousel-btn-next absolute top-1/2 right-2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold hover:bg-opacity-75 focus:outline-none z-20" data-program-id="${id}" data-direction="1"></button>
-                               <div class="carousel-dots absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
-                                   ${icons.map((_, index) => `<span class="carousel-dot carousel-dot-${id} w-2 h-2 rounded-full ${index === defaultImageIndex ? 'bg-white scale-125' : 'bg-white bg-opacity-50'} transition-all" data-index="${index}"></span>`).join('')}
-                               </div>
-                           ` : ''}
-                       </div>
-                       
-                       <!-- Content -->
-                       <div class="p-5 flex-1">
-                           <p class="text-sm font-semibold text-blue-600">${formatTimeRange(start, stop)}</p>
-                           <h4 class="text-xl font-bold text-gray-900 mt-1">${title} ${has_error ? '<span class="text-red-500" title="This program has an error (missing image or placeholder title).">●</span>' : ''}</h4>
-                           <div class="flex items-center gap-x-3 text-md font-medium text-gray-700 mt-1">
-                               ${sub_title ? `<h5>${sub_title}</h5>` : ''}
-                               ${episode_num ? `<span class="text-sm text-gray-500">${episode_num}</span>` : ''}
-                           </div>
-                           ${description ? `<p class="text-sm text-gray-600 mt-3">${shortDesc}</p>` : ''}
-                           
-                           <!-- Tags & Badges -->
-                           <div class="flex flex-wrap gap-2 mt-4 text-xs">
-                               ${live ? '<span class="bg-red-500 text-white px-3 py-1 rounded-full font-bold">LIVE</span>' : ''}
-                               ${premiere ? '<span class="bg-green-500 text-white px-3 py-1 rounded-full font-medium">Premiere</span>' : ''}
-                               ${previously_shown ? '<span class="bg-gray-400 text-white px-3 py-1 rounded-full font-medium">Rerun</span>' : ''}
-                               ${category ? `<span class="bg-gray-200 text-gray-800 px-3 py-1 rounded-full font-medium">${category}</span>` : ''}
-                               ${rating ? `<span class="bg-gray-200 text-gray-800 px-3 py-1 rounded-full font-medium">${rating}</span>` : ''}
-                               <span class="bg-gray-200 text-gray-800 px-3 py-1 rounded-full font-medium">${getDurationInMinutes(start, stop)} min</span>
-                               ${language ? `<span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium">${language}</span>` : ''}
-                           </div>
-                           
-                           <!-- Credits -->
-                           ${(creditsObj.directors && creditsObj.directors.length > 0) || (creditsObj.actors && creditsObj.actors.length > 0) ? `
-                               <div class="mt-4 pt-3 border-t border-gray-200">
-                                   <h6 class="text-sm font-semibold text-gray-800">Credits</h6>
-                                   <ul class="text-sm text-gray-600 mt-1 space-y-1">
-                                       ${creditsObj.directors && creditsObj.directors.length > 0 ? `<li><strong>Director:</strong> ${creditsObj.directors.join(', ')}</li>` : ''}
-                                       ${creditsObj.actors && creditsObj.actors.length > 0 ? `<li><strong>Cast:</strong> ${creditsObj.actors.join(', ')}</li>` : ''}
-                                   </ul>
-                               </div>
-                           ` : ''}
-                       </div>
-                   </div>
-               `;
-               return cardHTML;
-            }
-
-            /**
-             /**
-              * Fetches and renders the schedule for the current day (current, upcoming, past).
-              * @param {string} channelId The ID of the channel to load.
-              */
-             async function loadData(channelId) {
-                 resetUI();
-                 const selectedChannelName = channelSelectEl.options[channelSelectEl.selectedIndex].text;
-                 mainTitleEl.textContent = `${selectedChannelName} EPG Dashboard`;
-
-                 // --- Video Feed Button Logic ---
-                 if (VIDEO_FEEDS[selectedChannelName]) {
-                     watchFeedBtn.classList.remove('hidden');
-                 } else {
-                     watchFeedBtn.classList.add('hidden');
-                     videoPlayerDropdown.classList.add('hidden'); // Hide player if channel changes
-                 }
- 
-                 try {
-                     const response = await fetch(`${API_BASE_URL}/schedule/${channelId}`);
-                     if (!response.ok) {
-                         throw new Error(`Failed to fetch schedule: ${response.status} ${response.statusText}`);
-                     }
-                     const data = await response.json();
-                     
-                     // Combine current and upcoming programs for analysis (ignore past)
-                     const allPrograms = [...data.current, ...data.upcoming].map(p => ({
-                         ...p,
-                         start: new Date(p.start_time),
-                         stop: new Date(p.stop_time)
-                     })).sort((a, b) => a.start.getTime() - b.start.getTime());
- 
-                     // --- Analyze Gaps and Overlaps ---
-                     const gaps = [];
-                     const overlaps = [];
-                     const errors = allPrograms.filter(p => p.has_error);
-
-                     for (let i = 1; i < allPrograms.length; i++) {
-                         const prevProg = allPrograms[i - 1];
-                         const currentProg = allPrograms[i];
-                         const timeDiff = currentProg.start.getTime() - prevProg.stop.getTime();
- 
-                         if (timeDiff > 1000) { // Gap
-                             gaps.push({
-                                 after: prevProg.title,
-                                 before: currentProg.title,
-                                 start: prevProg.stop,
-                                 end: currentProg.start,
-                                 duration: getDurationInMinutes(prevProg.stop, currentProg.start)
-                             });
-                         } else if (timeDiff < -1000) { // Overlap
-                             overlaps.push({
-                                 first: prevProg.title,
-                                 second: currentProg.title,
-                                 overlapStart: currentProg.start,
-                                 overlapEnd: prevProg.stop,
-                                 duration: getDurationInMinutes(currentProg.start, prevProg.stop)
-                             });
-                         }
-                     }
- 
-                     // --- Render Dashboard Stats ---
-                     statTotalEl.textContent = allPrograms.length;
-                     statCurrentEl.textContent = data.current.length > 0 ? data.current[0].title : "None";
-                     statUpcomingEl.textContent = data.upcoming.length;
-                     statPastEl.textContent = data.past.length;
-                     statErrorsEl.textContent = errors.length;
-                     statScheduledThroughEl.textContent = allPrograms.length > 0 ? formatDate(allPrograms[allPrograms.length - 1].stop) : "N/A";
- 
-                     // --- Render Analysis ---
-                     renderAnalysis(gaps, overlaps, errors);
- 
-                     // --- Render Program Lists ---
-                     currentContainer.innerHTML = data.current.length > 0
-                         ? data.current.map(p => createProgramCard(p)).join('')
-                         : '<p class="text-gray-500 p-4 text-center">Nothing is currently scheduled to play.</p>';
-                     
-                     upcomingContainer.innerHTML = data.upcoming.length > 0
-                         ? data.upcoming.map(p => createProgramCard(p)).join('')
-                         : '<p class="text-gray-500 p-4 text-center">No upcoming programs found.</p>';
-                     
-                     // The "Finished" tab is handled by the date picker, so we don't modify its structure here.
- 
-                     // --- Show Content ---
-                     loadingEl.classList.add('hidden');
-                     contentEl.classList.remove('hidden');
- 
-                 } catch (err) {
-                     console.error("Error loading schedule data:", err);
-                     errorMessageEl.textContent = err.message || "An unknown error occurred. Check the console for details.";
-                     loadingEl.classList.add('hidden');
-                     errorEl.classList.remove('hidden');
-                 }
-             }
-            /**
-             * Renders the analysis cards for gaps and overlaps.
-             */
-            function renderAnalysis(gaps, overlaps, errors) {
-                // Render Errors
-                if (errors.length > 0) {
-                    errorsContainer.innerHTML = errors.map(p => `
-                        <div class="text-sm p-3 bg-red-100 rounded">
-                            <strong>Error in "${p.title}"</strong>
-                            <p>Scheduled: ${formatTimeRange(p.start, p.stop)}</p>
-                            <p class="font-medium">${p.description && p.description.includes('_') ? 'Description contains placeholder.' : ''} ${!p.icons || JSON.parse(p.icons.replace(/'/g, '"')).length === 0 ? 'Program is missing an image.' : ''}</p>
-                        </div>
-                    `).join('');
-                } else {
-                    errorsContainer.innerHTML = '<p class="text-sm text-gray-700">No scheduling errors found. Good!</p>';
-                }
-
-                // Render Gaps
-                if (gaps.length > 0) {
-                    gapsContainer.innerHTML = gaps.map(gap => `
-                        <div class="text-sm p-3 bg-yellow-100 rounded">
-                            <strong>${gap.duration} min gap</strong>
-                            <p>Between "${gap.after}" and "${gap.before}"</p>
-                            <p>Time: ${formatTimeRange(gap.start, gap.end)}</p>
-                        </div>
-                    `).join('');
-                } else {
-                    gapsContainer.innerHTML = '<p class="text-sm text-gray-700">No scheduling gaps found. Good!</p>';
-                }
-
-                if (overlaps.length > 0) {
-                    overlapsContainer.innerHTML = overlaps.map(ov => `
-                        <div class="text-sm p-3 bg-red-100 rounded">
-                            <strong>${ov.duration} min overlap</strong>
-                            <p>"${ov.first}" & "${ov.second}"</p>
-                            <p>Time: ${formatTimeRange(ov.overlapStart, ov.overlapEnd)}</p>
-                        </div>
-                    `).join('');
-                } else {
-                    overlapsContainer.innerHTML = '<p class="text-sm text-gray-700">No scheduling overlaps found. Good!</p>';
-                }
-            }
-
-            /**
-             * Fetches and displays program history for a selected date.
-             */
-            async function loadHistory(channelId, dateString) {
-                const historyContainer = document.getElementById('history-container');
-                historyContainer.innerHTML = '<div class="loader mx-auto"></div>'; // Show loader
-
-                try {
-                    const response = await fetch(`${API_BASE_URL}/history/${channelId}/${dateString}`);
-                    if (!response.ok) {
-                        throw new Error(`Failed to fetch history: ${response.statusText}`);
-                    }
-                    const programs = await response.json();
-
-                    if (programs.length > 0) {
-                        historyContainer.innerHTML = programs.map(p => createProgramCard(p)).join('');
-                    } else {
-                        historyContainer.innerHTML = '<p class="text-gray-500 p-4 text-center">No programs found for this date.</p>';
-                    }
-                } catch (err) {
-                    console.error("Error loading history:", err);
-                    historyContainer.innerHTML = `<p class="text-red-500 p-4 text-center">Error loading history: ${err.message}</p>`;
-                }
-            }
-
-            function handleDateChange(e) {
-                const selectedDate = e.target.value;
-                const selectedChannelId = channelSelectEl.value;
-                if (selectedDate && selectedChannelId) {
-                    loadHistory(selectedChannelId, selectedDate);
-                }
-            }
-
-            // --- Carousel Click Handler (Event Delegation) ---
-            function handleCarouselClick(event) {
-                const button = event.target.closest('.carousel-btn');
-                if (!button) return;
-
-                const programId = button.dataset.programId;
-                const direction = parseInt(button.dataset.direction);
-
-                const images = document.querySelectorAll(`.program-image-${programId}`);
-                const dots = document.querySelectorAll(`.carousel-dot-${programId}`);
-                if (images.length <= 1) return;
-
-                let currentIndex = -1;
-                images.forEach((img, index) => {
-                    if (img.classList.contains('opacity-100')) {
-                        currentIndex = index;
-                    }
-                });
-                
-                if (currentIndex === -1) currentIndex = (images.length > 1 ? 1 : 0); // Default index
-
-                const newIndex = (currentIndex + direction + images.length) % images.length;
-
-                if (currentIndex === newIndex) return; // No change
-
-                // Update images
-                images[currentIndex].classList.remove('opacity-100', 'z-10');
-                images[currentIndex].classList.add('opacity-0', 'z-0');
-                images[newIndex].classList.remove('opacity-0', 'z-0');
-                images[newIndex].classList.add('opacity-100', 'z-10');
-
-                // Update dots
-                if (dots.length > 0) {
-                    dots[currentIndex].classList.remove('scale-125');
-                    dots[currentIndex].classList.add('bg-opacity-50');
-                    dots[newIndex].classList.remove('bg-opacity-50');
-                    dots[newIndex].classList.add('scale-125');
-                }
-            }
-
-            // --- Tab switching logic ---
-            function setupTabs() {
-                tabButtons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        // Deactivate all buttons
-                        tabButtons.forEach(btn => {
-                            btn.classList.remove('border-blue-500', 'text-blue-600');
-                            btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-                        });
-                        
-                        // Activate clicked button
-                        button.classList.add('border-blue-500', 'text-blue-600');
-                        button.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-
-                        // Hide all panels
-                        tabPanels.forEach(panel => {
-                            panel.classList.add('hidden');
-                        });
-
-                        // Show target panel
-                        const targetPanelId = button.getAttribute('data-target');
-                        document.getElementById(targetPanelId).classList.remove('hidden');
-                    });
-                });
-            }
-
-            function populateTimezones() {
-                const timezones = {
-                    'PST': 'America/Los_Angeles',
-                    'EST': 'America/New_York',
-                    'UTC': 'UTC',
-                    'CET': 'CET'
-                };
-                const selectedTimezone = getSelectedTimezone();
-
-                for (const [name, value] of Object.entries(timezones)) {
-                    const option = document.createElement('option');
-                    option.value = value;
-                    option.textContent = name;
-                    if (value === selectedTimezone) {
-                        option.selected = true;
-                    }
-                    timezoneSelectEl.appendChild(option);
-                }
-
-                // If the currently selected timezone in storage isn't one of our options, default to UTC.
-                if (!Object.values(timezones).includes(selectedTimezone)) {
-                    timezoneSelectEl.value = 'UTC';
-                    sessionStorage.setItem('timezone', 'UTC');
-                }
-            }
-
-            function setupWatchFeedButton() {
-                watchFeedBtn.addEventListener('click', (event) => {
-                    event.stopPropagation(); // Prevent click from immediately closing the dropdown
-                    const selectedChannelName = channelSelectEl.options[channelSelectEl.selectedIndex].text;
-                    const feedUrl = VIDEO_FEEDS[selectedChannelName];
-
-                    if (feedUrl) {
-                        const isHidden = videoPlayerDropdown.classList.toggle('hidden');
-                        
-                        // Always clear previous content to stop any playing video
-                        videoPlayerContainer.innerHTML = '';
-
-                        if (!isHidden) {
-                            const iframe = document.createElement('iframe');
-                            iframe.src = feedUrl;
-                            iframe.width = '100%';
-                            iframe.height = '215'; // Fixed height for the container
-                            iframe.frameborder = '0';
-                            iframe.allowfullscreen = true;
-                            videoPlayerContainer.appendChild(iframe);
-                        }
-                    }
-                });
-
-                // Close dropdown if clicking outside
-                document.addEventListener('click', (event) => {
-                    if (!videoPlayerDropdown.contains(event.target) && !watchFeedBtn.contains(event.target)) {
-                        videoPlayerDropdown.classList.add('hidden');
-                        // Stop video when closing
-                        videoPlayerContainer.innerHTML = '';
-                    }
-                });
-            }
-
-            // --- Initialization ---
-            async function initialize() {
-                try {
-                    // 1. Populate Channel Dropdown from API
-                    const response = await fetch(`${API_BASE_URL}/channels`);
-                    if (!response.ok) throw new Error('Failed to fetch channels');
-                    const channels = await response.json();
-
-                    channels.forEach(channel => {
-                        const option = document.createElement('option');
-                        option.value = channel.id; // Use ID from the database
-                        option.textContent = channel.name;
-                        channelSelectEl.appendChild(option);
-                    });
-
-                    // 2. Populate Timezone Dropdown
-                    populateTimezones();
-
-                    // 3. Add change listener to dropdowns
-                    channelSelectEl.addEventListener('change', (e) => {
-                        const selectedChannelId = e.target.value;
-                        if (selectedChannelId) {
-                            loadData(selectedChannelId);
-                        }
-                    });
-
-                    timezoneSelectEl.addEventListener('change', (e) => {
-                        sessionStorage.setItem('timezone', e.target.value);
-                        const selectedChannelId = channelSelectEl.value;
-                        if (selectedChannelId) {
-                            loadData(selectedChannelId);
-                        }
-                    });
-
-                    // 4. Add listener for the history date picker
-                    document.getElementById('history-date-picker').addEventListener('change', handleDateChange);
-
-                    // 5. Setup tab listeners
-                    setupTabs();
-
-                    // 6. Setup carousel listener
-                    document.body.addEventListener('click', handleCarouselClick);
-
-                    // 7. Setup watch feed button
-                    setupWatchFeedButton();
-
-                    // 8. Initial data load (load the first channel)
-                    if (channels.length > 0) {
-                        const firstChannelId = channels[0].id;
-                        loadData(firstChannelId);
-                    } else {
-                        throw new Error("No channels configured in the backend.");
-                    }
-
-                } catch (err) {
-                    console.error("Initialization failed:", err);
-                    errorMessageEl.textContent = `Initialization failed: ${err.message}. Is the backend server running?`;
-                    loadingEl.classList.add('hidden');
-                    errorEl.classList.remove('hidden');
-                }
-            }
-
-            // Run initialization
-            initialize();
-        });
-    </script>
 </body>
 </html>
