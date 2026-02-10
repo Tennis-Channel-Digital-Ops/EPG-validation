@@ -208,26 +208,6 @@
             const historyDatePicker = document.getElementById('history-date-picker');
             const historyContainer = document.getElementById('history-container');
 
-            // --- NEW: helper to show cert instructions ---
-            function showCertInstructions() {
-                errorMessageEl.innerHTML = `
-                    <div class="mt-2">
-                        <p class="font-semibold text-red-800">To Inittialize Data click here:</p>
-                        <a class="text-blue-700 underline break-all" href="https://192.168.8.126:1221/api/channels" target="_blank" rel="noopener">
-                            https://192.168.8.126:1221/api/channels
-                        </a>
-                        <ol class="list-decimal ml-5 mt-3 space-y-1 text-red-700">
-                            <li>Then Click "<strong>Advanced</strong>"</li>
-                            <li>Finally Click "<strong>Proceed to 192.168.8.126 (unsafe)</strong>"</li>
-                            <li>Return to the page and refresh</li>
-                        </ol>
-                    </div>
-                `;
-                loadingEl.classList.add('hidden');
-                errorEl.classList.remove('hidden');
-                contentEl.classList.add('hidden');
-            }
-
             /**
              * Resets the entire UI to a loading state.
              */
